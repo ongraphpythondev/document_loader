@@ -14,18 +14,8 @@ from langchain.callbacks import get_openai_callback
 import os
 
 # Sidebar contents
-with st.sidebar:
-    st.title('🤗💬 LLM Chat App')
-    st.markdown('''
-    ## About
-    This app is an LLM-powered chatbot built using:
-    - [Streamlit](https://streamlit.io/)
-    - [LangChain](https://python.langchain.com/)
-    - [OpenAI](https://platform.openai.com/docs/models) LLM model
-
-    ''')
-    add_vertical_space(5)
     
+
 
 load_dotenv()
 try: 
@@ -35,6 +25,17 @@ except:
 def main():
     demo=st.secrets["DEMO"]#set demo 1
     if demo:
+        with st.sidebar:
+            st.title('🤗💬 LLM Chat App')
+            st.markdown('''
+            ## About
+            This app is an LLM-powered chatbot built using:
+            - [Streamlit](https://streamlit.io/)
+            - [LangChain](https://python.langchain.com/)
+            - [OpenAI](https://platform.openai.com/docs/models) LLM model
+
+            ''')
+            add_vertical_space(5)
         st.header("Chat with PDF 💬")
 
 
@@ -91,6 +92,8 @@ def main():
                     response = chain.run(input_documents=docs, question=query)
                     print(cb)
                 st.write(response)
+    else:
+        st.header("This App is Private!!!")
 
 if __name__ == '__main__':
     main()
