@@ -33,62 +33,64 @@ try:
 except:
     openai_api_key=os.getenv('OPENAI_API_KEY')
 def main():
-    st.header("Chat with PDF 💬")
+    demo=st.secrets["DEMO"]#set demo 1
+    if demo:
+        st.header("Chat with PDF 💬")
 
 
-    # upload a PDF file
-    pdf = st.file_uploader("Upload your PDF", type='pdf')
+        # upload a PDF file
+        pdf = st.file_uploader("Upload your PDF", type='pdf')
 
-    # st.write(pdf)
-    if pdf is not None:
-        pdf_reader = PdfReader(pdf)
-        
-        text = ""
-        for page in pdf_reader.pages:
-            text += page.extract_text()
+        # st.write(pdf)
+        if pdf is not None:
+            pdf_reader = PdfReader(pdf)
+            
+            text = ""
+            for page in pdf_reader.pages:
+                text += page.extract_text()
 
-        text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=1000,
-            chunk_overlap=200,
-            length_function=len
-            )
-        chunks = text_splitter.split_text(text=text)
+            text_splitter = RecursiveCharacterTextSplitter(
+                chunk_size=1000,
+                chunk_overlap=200,
+                length_function=len
+                )
+            chunks = text_splitter.split_text(text=text)
 
-        # # embeddings
-        store_name = pdf.name[:-4]
-        st.write(f'{store_name}')
-        # st.write(chunks)
+            # # embeddings
+            store_name = pdf.name[:-4]
+            st.write(f'{store_name}')
+            # st.write(chunks)
 
-        if os.path.exists(f"{store_name}.pkl"):
-            with open(f"{store_name}.pkl", "rb") as f:
-                VectorStore = pickle.load(f)
-            # st.write('Embeddings Loaded from the Disk')s
-        else:
+            if os.path.exists(f"{store_name}.pkl"):
+                with open(f"{store_name}.pkl", "rb") as f:
+                    VectorStore = pickle.load(f)
+                # st.write('Embeddings Loaded from the Disk')s
+            else:
+                # embeddings = OpenAIEmbeddings()
+                
+                embeddings=HuggingFaceEmbeddings()
+                VectorStore = FAISS.from_texts(chunks, embedding=embeddings)
+                with open(f"{store_name}.pkl", "wb") as f:
+                    pickle.dump(VectorStore, f)
+
             # embeddings = OpenAIEmbeddings()
-            
-            embeddings=HuggingFaceEmbeddings()
-            VectorStore = FAISS.from_texts(chunks, embedding=embeddings)
-            with open(f"{store_name}.pkl", "wb") as f:
-                pickle.dump(VectorStore, f)
+            # VectorStore = FAISS.from_texts(chunks, embedding=embeddings)
 
-        # embeddings = OpenAIEmbeddings()
-        # VectorStore = FAISS.from_texts(chunks, embedding=embeddings)
+            # Accept user questions/query
+            query = st.text_input("Ask questions about your PDF file:")
+            # st.write(query)
 
-        # Accept user questions/query
-        query = st.text_input("Ask questions about your PDF file:")
-        # st.write(query)
+            if query:
+                docs = VectorStore.similarity_search(query=query, k=3)
 
-        if query:
-            docs = VectorStore.similarity_search(query=query, k=3)
+                llm = OpenAI(openai_api_key=openai_api_key,temperature=0,)
+                chain = load_qa_chain(llm=llm, chain_type="stuff")
+                
 
-            llm = OpenAI(openai_api_key=openai_api_key,temperature=0,)
-            chain = load_qa_chain(llm=llm, chain_type="stuff")
-            
-
-            with get_openai_callback() as cb:
-                response = chain.run(input_documents=docs, question=query)
-                print(cb)
-            st.write(response)
+                with get_openai_callback() as cb:
+                    response = chain.run(input_documents=docs, question=query)
+                    print(cb)
+                st.write(response)
 
 if __name__ == '__main__':
     main()
