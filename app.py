@@ -9,21 +9,29 @@ from langchain.vectorstores import FAISS
 from langchain.llms import OpenAI
 from langchain.chains.question_answering import load_qa_chain
 from langchain.embeddings import HuggingFaceEmbeddings
-
+import tiktoken
 from langchain.callbacks import get_openai_callback
 import os
 
 # Sidebar contents
     
+def num_tokens_from_string(string: str, encoding_name: str) -> int:
+    encoding = tiktoken.encoding_for_model(encoding_name)
+    num_tokens = len(encoding.encode(string))
+    return num_tokens
 
 
 load_dotenv()
 try: 
     openai_api_key=st.secrets["OPENAI_API_KEY"]
-except:
-    openai_api_key=os.getenv('OPENAI_API_KEY')
-def main():
+    max_token_user=st.secrets["MAX_TOKEN_USER"]
     demo=st.secrets["DEMO"]#set demo 1
+except:
+    max_token_user=os.getenv("MAX_TOKEN_USER")
+    openai_api_key=os.getenv('OPENAI_API_KEY')
+    demo=os.getenv('DEMO')
+def main():
+    
     if demo:
         with st.sidebar:
             st.title('🤗💬 LLM Chat App')
@@ -80,18 +88,23 @@ def main():
             # Accept user questions/query
             query = st.text_input("Ask questions about your PDF file:")
             # st.write(query)
-
+            user_token=num_tokens_from_string(query, "gpt-3.5-turbo")
+            print("USER TOKEN COUNT: ", user_token)
             if query:
-                docs = VectorStore.similarity_search(query=query, k=3)
+                if user_token < int(max_token_user):
+                    docs = VectorStore.similarity_search(query=query, k=3)
 
-                llm = OpenAI(openai_api_key=openai_api_key,temperature=0,)
-                chain = load_qa_chain(llm=llm, chain_type="stuff")
-                
+                    llm = OpenAI(openai_api_key=openai_api_key,temperature=0,)
+                    chain = load_qa_chain(llm=llm, chain_type="stuff")
+                    
 
-                with get_openai_callback() as cb:
-                    response = chain.run(input_documents=docs, question=query)
-                    print(cb)
-                st.write(response)
+                    with get_openai_callback() as cb:
+                        response = chain.run(input_documents=docs, question=query)
+                        print(cb)
+                    st.write(response)
+                else:
+                    st.write(f"EXCEED ALLOCATED PROMPT,\n MAX TOKEN: {max_token_user} \n YOUR TOKEN: {user_token}")
+
     else:
         st.header("This App is Private!!!")
 
