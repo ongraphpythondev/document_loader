@@ -14,7 +14,7 @@ import os
 from openai import AuthenticationError 
 
 st.header("Chat with PDF 💬")
-subheader = st.subheader('Enter an API key in the sidebar to analyze your report.',divider=True)
+subheader = st.subheader('Enter an API key in the sidebar to chat with your pdf.',divider=True)
 with st.sidebar:
     st.title('🤗💬 LLM Chat App')
     st.markdown('''
