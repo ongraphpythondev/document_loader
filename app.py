@@ -154,6 +154,8 @@ if __name__ == '__main__':
                 st.session_state.messages.append({"role": "user", "content": prompt})
                 with st.chat_message("user"):
                     st.markdown(prompt)
-                with st.chat_message("assistant"):                        
-                    full_response=st.write_stream(main(prompt))
-                    st.session_state.messages.append({"role": "assistant", "content": full_response})
+                
+                with st.chat_message("assistant"):  
+                    with st.spinner("Thinking..."):                      
+                        full_response=st.write_stream(main(prompt))
+                        st.session_state.messages.append({"role": "assistant", "content": full_response})
