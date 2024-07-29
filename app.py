@@ -4,7 +4,6 @@ from PyPDF2 import PdfReader
 from streamlit_extras.add_vertical_space import add_vertical_space
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.vectorstores import FAISS
-from langchain.llms import OpenAI
 from langchain.embeddings import HuggingFaceEmbeddings
 import os
 from openai import AuthenticationError
@@ -18,6 +17,7 @@ from langchain.prompts import (
     MessagesPlaceholder,
     SystemMessagePromptTemplate,
     )
+from langchain_openai import OpenAI
 
 
 st.header("Chat with PDF 💬")
@@ -127,7 +127,7 @@ if __name__ == '__main__':
         subheader.empty()
 
         pdf = st.file_uploader("Upload your PDF", type='pdf')
-        llm = OpenAI(openai_api_key=st.session_state.OpenAPIKey,temperature=0)
+        llm = OpenAI(api_key=st.session_state.OpenAPIKey,temperature=0,verbose=True)
         if "memory" not in st.session_state:
             st.session_state.memory = ConversationBufferWindowMemory(
                 llm=llm,
