@@ -109,8 +109,8 @@ def main(query):
         )
         output = ""
         for chunk in chain.stream({"question":query, "input_documents": docs}):
-            output += chunk.content
-            yield chunk.content
+            output += chunk
+            yield chunk
             time.sleep(0.05)
 
         st.session_state.memory.save_context({"inputs": query}, {"output": output})
